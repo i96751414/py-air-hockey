@@ -404,7 +404,7 @@ class Game:
         selector_id = lan_menu.add_selector("Play with", elements, onchange=None,
                                             onreturn=lambda user: self._invite_user(user, on_user_accept, join_threads))
         lan_menu.add_option("Edit username", self._edit__username_menu)
-        lan_menu.add_option("Return to main menu", lambda: lan_menu.disable())
+        lan_menu.add_option("Return to main menu", lan_menu.disable)
 
         while self.__is_running and lan_menu.is_enabled():
             # Application events
