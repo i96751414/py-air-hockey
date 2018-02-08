@@ -5,7 +5,7 @@
 </h1>
 <p align="center">A small Air Hockey game written in Python</p>
 <div align="center">
-
+  <a href="https://www.codacy.com/app/i96751414/py-air-hockey?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=i96751414/py-air-hockey&amp;utm_campaign=Badge_Grade"><img alt="Codacy Badge" src="https://api.codacy.com/project/badge/Grade/06f87430bd7b48b3bb1d7eee43b0cc2b" /></a>
 </div>
 <br/>
 
