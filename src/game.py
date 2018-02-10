@@ -235,20 +235,19 @@ class Game:
             pygame.display.flip()
             self.__clock.tick(self.__fps)
 
-    def _invitation_request_menu(self, username):
+    def _info_screen(self, line1, line2):
         """
-        Custom menu to give notice someone is inviting to play.
+        Show info message.
 
-        :param username: str, Second player username
-        :return: bool, Execution OK
+        :param line1: first line
+        :param line2: second line
+        :return: None
         """
         inner_width = int(self.__width - self.__width / 5)
         self.__screen.fill(COLOR_LIGHT_GRAY)
 
-        text1, width1, height1 = generate_wrapped_text("<%s> is inviting you to play!" % username, GAME_FONT,
-                                                       COLOR_GRAY, inner_width, self.__height / 10)
-        text2, width2, height2 = generate_wrapped_text("Press [Esc]/[N] to refuse or [Return]/[Y] to accept",
-                                                       GAME_FONT, COLOR_GRAY, inner_width, self.__height / 10)
+        text1, width1, height1 = generate_wrapped_text(line1, GAME_FONT, COLOR_GRAY, inner_width, self.__height / 10)
+        text2, width2, height2 = generate_wrapped_text(line2, GAME_FONT, COLOR_GRAY, inner_width, self.__height / 10)
 
         x1 = int((self.__width - width1) / 2)
         y1 = int(self.__height / 3 - height1 / 2)
@@ -259,6 +258,16 @@ class Game:
         self.__screen.blit(text2, (x2, y2))
 
         pygame.display.flip()
+
+    def _invitation_request_menu(self, username):
+        """
+        Custom menu to give notice someone is inviting to play.
+
+        :param username: str, Second player username
+        :return: bool, Execution OK
+        """
+        self._info_screen("<%s> is inviting you to play!" % username,
+                          "Press [Esc]/[N] to refuse or [Return]/[Y] to accept")
 
         start_time = time.time()
         while time.time() - start_time < INVITATION_TIMEOUT:
@@ -312,21 +321,7 @@ class Game:
         # Do graphical part
         username, ip = user
 
-        inner_width = int(self.__width - self.__width / 5)
-        self.__screen.fill(COLOR_LIGHT_GRAY)
-        text1, width1, height1 = generate_wrapped_text("Waiting for <%s> response..." % username, GAME_FONT, COLOR_GRAY,
-                                                       inner_width, self.__height / 10)
-        text2, width2, height2 = generate_wrapped_text("We are almost there!", GAME_FONT, COLOR_GRAY, inner_width,
-                                                       self.__height / 10)
-
-        x1 = int((self.__width - width1) / 2)
-        y1 = int(self.__height / 3 - height1 / 2)
-        x2 = int((self.__width - width2) / 2)
-        y2 = int(5 * self.__height / 6 - height2 / 2)
-
-        self.__screen.blit(text1, (x1, y1))
-        self.__screen.blit(text2, (x2, y2))
-        pygame.display.flip()
+        self._info_screen("Waiting for <%s> response..." % username, "We are almost there!")
 
         # Connect with server
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -826,19 +821,31 @@ class Game:
                 server_data.clear()
 
             # Do graphic part
-            self.__screen.fill(COLOR_LIGHT_GRAY)
-            for i in range(int(self.__width / self.__grid_width)):
-                for j in range(int(self.__height / self.__grid_width)):
-                    gfxdraw.aacircle(self.__screen, self.__grid_x_offset + i * self.__grid_width,
-                                     self.__grid_y_offset + j * self.__grid_width, self.__grid_radius, COLOR_SILVER)
-
-            aa_rounded_rect(self.__screen, (self.__x_r1, y_r1, self.__width_r, self.__height_r), COLOR_BLUE_2, 1)
-            aa_rounded_rect(self.__screen, (self.__x_r2, y_r2, self.__width_r, self.__height_r), COLOR_RED_2, 1)
-            gfxdraw.aacircle(self.__screen, round(x_ball), round(y_ball), self.__ball_radius, COLOR_GRAY)
-            gfxdraw.filled_circle(self.__screen, round(x_ball), round(y_ball), self.__ball_radius, COLOR_GRAY)
-
-            pygame.display.flip()
+            self._do_graphics(y_r1, y_r2, x_ball, y_ball)
             self.__clock.tick(self.__fps)
+
+    def _do_graphics(self, y_r1, y_r2, x_ball, y_ball):
+        """
+        Draw the main game graphics.
+
+        :param y_r1: y coordinate of the first pad
+        :param y_r2: y coordinate of the second pad
+        :param x_ball: x coordinate of the ball
+        :param y_ball: y coordinate of the ball
+        :return: None
+        """
+        self.__screen.fill(COLOR_LIGHT_GRAY)
+        for i in range(int(self.__width / self.__grid_width)):
+            for j in range(int(self.__height / self.__grid_width)):
+                gfxdraw.aacircle(self.__screen, self.__grid_x_offset + i * self.__grid_width,
+                                 self.__grid_y_offset + j * self.__grid_width, self.__grid_radius, COLOR_SILVER)
+
+        aa_rounded_rect(self.__screen, (self.__x_r1, y_r1, self.__width_r, self.__height_r), COLOR_BLUE_2, 1)
+        aa_rounded_rect(self.__screen, (self.__x_r2, y_r2, self.__width_r, self.__height_r), COLOR_RED_2, 1)
+        gfxdraw.aacircle(self.__screen, round(x_ball), round(y_ball), self.__ball_radius, COLOR_GRAY)
+        gfxdraw.filled_circle(self.__screen, round(x_ball), round(y_ball), self.__ball_radius, COLOR_GRAY)
+
+        pygame.display.flip()
 
     def _keep_playing_client(self):
         """
@@ -879,21 +886,7 @@ class Game:
             )
 
             # Do graphic part
-            self.__screen.fill(COLOR_LIGHT_GRAY)
-            for i in range(int(self.__width / self.__grid_width)):
-                for j in range(int(self.__height / self.__grid_width)):
-                    gfxdraw.aacircle(self.__screen, self.__grid_x_offset + i * self.__grid_width,
-                                     self.__grid_y_offset + j * self.__grid_width, self.__grid_radius, COLOR_SILVER)
-
-            aa_rounded_rect(self.__screen, (self.__x_r1, server_data.y_r1, self.__width_r, self.__height_r),
-                            COLOR_BLUE_2, 1)
-            aa_rounded_rect(self.__screen, (self.__x_r2, client_data.y_r2, self.__width_r, self.__height_r),
-                            COLOR_RED_2, 1)
-            gfxdraw.aacircle(self.__screen, round(server_data.x_ball), round(server_data.y_ball), self.__ball_radius,
-                             COLOR_GRAY)
-            gfxdraw.filled_circle(self.__screen, round(server_data.x_ball), round(server_data.y_ball),
-                                  self.__ball_radius, COLOR_GRAY)
-            pygame.display.flip()
+            self._do_graphics(server_data.y_r1, client_data.y_r2, server_data.x_ball, server_data.y_ball)
 
     def _keep_playing(self, mode):
         """
