@@ -18,7 +18,7 @@ from random import SystemRandom
 import pygameMenu
 from pygameMenu.locals import *
 
-random = SystemRandom()
+rand = SystemRandom()
 
 
 class Game:
@@ -656,7 +656,7 @@ class Game:
 
         x_ball = int(self.__width / 2)
         y_ball = int(self.__height / 2)
-        ball_angle = random.choice([(math.pi / 4) + (i * math.pi / 2) for i in range(4)])
+        ball_angle = rand.choice([(math.pi / 4) + (i * math.pi / 2) for i in range(4)])
         ball_speed = self.__ball_start_speed
 
         min_distance_ratio = 0
@@ -771,7 +771,7 @@ class Game:
                         ball_speed += self.__ball_speed_step
                     # For easy level, generate distance ratio for computer to follow the ball
                     if self.__level == LEVEL_EASY and not self._is_right_direction(ball_angle):
-                        min_distance_ratio = random.uniform(0, 0.7)
+                        min_distance_ratio = rand.uniform(0, 0.7)
                         # min_distance_ratio = random.triangular(0, 0.7)
                     # Change ball angle
                     ball_angle = math.pi - ball_angle
