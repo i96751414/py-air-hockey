@@ -333,14 +333,15 @@ class Game:
         client.settimeout(INVITATION_TIMEOUT)
         client.connect((ip, TCP_PORT))
         try:
-            construct_and_send_data(client, InvitationPacket(self.username))
-            data = receive_and_parse_data(client, InvitationAcceptedPacket)
+            InvitationPacket(self.username).send_to(client)
+            packet = InvitationAcceptedPacket()
+            status = packet.receive_from(client)
         except (socket.timeout, ConnectionAbortedError):
             pass
         else:
-            if data is not None:
+            if status:
                 client.settimeout(TIMEOUT)
-                self.__client_username = data.username
+                self.__client_username = packet.username
                 self.__client = client
                 on_execution_start()
                 self._keep_playing_lan(MODE_LAN_CLIENT)
@@ -437,7 +438,7 @@ class Game:
                     self.__client = get_connection.connection
                     self.__client_username = get_connection.username
                     try:
-                        construct_and_send_data(self.__client, InvitationAcceptedPacket(self.username))
+                        InvitationAcceptedPacket(self.username).send_to(self.__client)
                     except (socket.timeout, ConnectionAbortedError):
                         self.__client = self.__client_username = None
                         get_connection.refuse_connection()
@@ -571,7 +572,7 @@ class Game:
         """
         return not (self.__ball_radius < y_ball < self.__height - self.__ball_radius)
 
-    class _ServerData:
+    class _ServerData(Packet):
         """
         ServerData packet.
         """
@@ -633,7 +634,7 @@ class Game:
             """
             self.__methods = []
 
-    class _ClientData:
+    class _ClientData(Packet):
         """
         ClientData packet.
         """
@@ -663,6 +664,7 @@ class Game:
 
         min_distance_ratio = 0
         server_data = self._ServerData()
+        client_data = self._ClientData()
 
         while True:
             # Gat all events
@@ -734,8 +736,7 @@ class Game:
                             y_r2 -= self.__r_hard_speed_offset
             elif mode == MODE_LAN_SERVER:
                 # Get data from client
-                client_data = receive_and_parse_data(self.__client, self._ClientData)
-                if client_data is None:
+                if not client_data.receive_from(self.__client):
                     return False
                 y_r2 = client_data.y_r2
                 # Update data to send to client
@@ -815,13 +816,13 @@ class Game:
                         server_data.do_update_score(has_scored)
                         server_data.do_score_screen(SCORE_SCREEN_LOSE if has_scored else SCORE_SCREEN_SCORED)
                         # Send server data
-                        construct_and_send_data(self.__client, server_data)
+                        server_data.send_to(self.__client)
                 self._score_screen(screen_type)
                 return True
 
             if mode == MODE_LAN_SERVER:
                 # Send server data
-                construct_and_send_data(self.__client, server_data)
+                server_data.send_to(self.__client)
                 server_data.clear()
 
             # Do graphic part
@@ -865,10 +866,9 @@ class Game:
                 client_data.y_r2 += self.__r_max_speed
 
             # Send data to server
-            construct_and_send_data(self.__client, client_data)
+            client_data.send_to(self.__client)
             # Receive data from server
-            server_data = receive_and_parse_data(self.__client, self._ServerData)
-            if server_data is None:
+            if not server_data.receive_from(self.__client):
                 return False
 
             server_data.handle_methods(

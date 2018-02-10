@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import math
-import pickle
+import json
 import socket
 import pygame
 import itertools
@@ -13,8 +13,9 @@ __all__ = [
     "generate_wrapped_text",
     "wrap_to_pi",
     "get_local_ip",
-    "receive_and_parse_data",
-    "construct_and_send_data",
+    "Packet",
+    "InvalidData",
+    "UnknownPacket"
 ]
 
 
@@ -159,39 +160,45 @@ def get_local_ip():
     return ip
 
 
-def receive_and_parse_data(conn, base_type, buffer_size=512):
-    """
-    Receive pickle data from a connection and parse it, checking its type.
-    If the parse fails or no data is obtained, return None.
-
-    :param conn: Socket connection
-    :param base_type: Type of data
-    :param buffer_size: Socket buffer size
-    :return: data
-    """
-    if conn is None:
-        return None
-    _data = conn.recv(buffer_size)
-    if not _data:
-        return None
-    try:
-        data = pickle.loads(_data)
-    except pickle.PickleError:
-        return None
-    if type(data) is not base_type:
-        return None
-    return data
+class UnknownPacket(Exception):
+    pass
 
 
-def construct_and_send_data(conn, data):
-    """
-    Construct pickle data and send it using the given connection.
-    If no connection, return None.
+class InvalidData(Exception):
+    pass
 
-    :param conn: Socket connection
-    :param data: Data to send
-    :return: Bytes sent
+
+class Packet:
     """
-    if conn is None:
-        return None
-    return conn.send(pickle.dumps(data))
+    General packet class
+    """
+
+    def dumps(self):
+        return json.dumps({self.__class__.__name__: self.__dict__}).encode()
+
+    def loads(self, data):
+        tag = self.__class__.__name__
+        try:
+            _data = json.loads(data)
+        except Exception:
+            raise UnknownPacket
+        if tag not in _data or not isinstance(_data[tag], dict) or set(_data[tag]) != set(self.__dict__):
+            raise InvalidData
+        self.__dict__.update(_data[tag])
+
+    def receive_from(self, conn, buffer_size=512):
+        if conn is None:
+            return False
+        data = conn.recv(buffer_size)
+        if not data:
+            return False
+        try:
+            self.loads(data)
+        except (UnknownPacket, InvalidData):
+            return False
+        return True
+
+    def send_to(self, conn):
+        if conn is None:
+            return None
+        return conn.send(self.dumps())

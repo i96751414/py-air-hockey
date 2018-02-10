@@ -5,7 +5,7 @@ import time
 import socket
 import threading
 from .globals import TCP_PORT, INVITATION_TIMEOUT
-from .utils import get_local_ip, receive_and_parse_data
+from .utils import get_local_ip, Packet
 
 __all__ = [
     "InvitationPacket",
@@ -14,17 +14,13 @@ __all__ = [
 ]
 
 
-class InvitationPacket:
+class InvitationPacket(Packet):
     """
     Packet sent on invitation request.
     """
 
-    def __init__(self, username):
-        self.__username = username
-
-    @property
-    def username(self):
-        return self.__username
+    def __init__(self, username=""):
+        self.username = username
 
 
 class InvitationAcceptedPacket(InvitationPacket):
@@ -49,22 +45,24 @@ class GetConnection(threading.Thread):
 
     def run(self):
         self.__is_running = True
+        packet = InvitationPacket()
         while self.__is_running:
             connection, (ip, _) = self.__server.accept()
             if ip not in self.__ip:
                 connection.settimeout(INVITATION_TIMEOUT)
                 try:
-                    data = receive_and_parse_data(connection, InvitationPacket)
+                    if not packet.receive_from(connection):
+                        connection.close()
+                        continue
                 except (socket.timeout, ConnectionAbortedError):
                     continue
 
-                if data is not None:
-                    self.__connection = connection
-                    self.__username = data.username
-                    while self.__is_running and self.__connection is not None:
-                        time.sleep(0.1)
-                else:
-                    connection.close()
+                self.__connection = connection
+                self.__username = packet.username
+                while self.__is_running and self.__connection is not None:
+                    time.sleep(0.1)
+            else:
+                connection.close()
 
     @property
     def connection(self):
