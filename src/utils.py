@@ -120,7 +120,8 @@ def generate_wrapped_text(text, font, color, width, height, min_font_size=20, ma
     :param max_font_size: int, Maximum font size
     :return: Surface, width, height
     """
-    assert max_font_size >= min_font_size, "Maximum font size must be greater or equal than min font size"
+    if max_font_size < min_font_size:
+        raise AssertionError("Maximum font size must be greater or equal than min font size")
     while True:
         font_obj = pygame.font.Font(font, max_font_size)
         w, h = font_obj.size(text)

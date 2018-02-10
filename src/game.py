@@ -469,9 +469,6 @@ class Game:
         :param screen_type: enum, Type of the screen to be displayed.
         :return: Execution OK.
         """
-        assert screen_type in [SCORE_SCREEN_PAUSE, SCORE_SCREEN_SCORED, SCORE_SCREEN_LOSE, SCORE_SCREEN_PLAYER1_SCORED,
-                               SCORE_SCREEN_PLAYER2_SCORED], "Unknown screen type"
-
         x = round(self.__width / 10)
         y = round(self.__height / 10)
         width = self.__width - 2 * x
@@ -649,8 +646,6 @@ class Game:
         :param mode: enum, Mode of game.
         :return: bool, Execution OK.
         """
-        assert mode in [MODE_SINGLE_PLAYER, MODE_2_PLAYERS, MODE_LAN_SERVER], "Unknown mode"
-
         y_r1 = (self.__height - self.__height_r) / 2
         y_r2 = y_r1
 
@@ -911,7 +906,6 @@ class Game:
         :param mode: Mode of the game
         :return: None
         """
-        assert mode in [MODE_LAN_CLIENT, MODE_LAN_SERVER], "Unknown lan mode"
         try:
             if mode == MODE_LAN_SERVER:
                 self._keep_playing(MODE_LAN_SERVER)
@@ -972,7 +966,8 @@ class Game:
         :param difficulty: enum, Game difficulty
         :return: None
         """
-        assert difficulty in [LEVEL_EASY, LEVEL_MEDIUM, LEVEL_HARD, LEVEL_IMPOSSIBLE], "Unknown difficulty"
+        if difficulty not in [LEVEL_EASY, LEVEL_MEDIUM, LEVEL_HARD, LEVEL_IMPOSSIBLE]:
+            raise AssertionError("Unknown difficulty")
         self.__level = difficulty
 
     def play(self):
@@ -981,7 +976,8 @@ class Game:
 
         :return: None
         """
-        assert self.__is_running, "Game can only be started once"
+        if not self.__is_running:
+            raise AssertionError("Game can only be started once")
         self.__sound_main.play()
         while self.__is_running:
             self._start_menu()
