@@ -6,17 +6,19 @@ import math
 import time
 import json
 import pygame
-import random
 import socket
 from .utils import *
 from .globals import *
 from .broadcast import *
 from .invitation import *
 from pygame import gfxdraw
+from random import SystemRandom
 
 # pygameMenu
 import pygameMenu
 from pygameMenu.locals import *
+
+random = SystemRandom()
 
 
 class Game:
